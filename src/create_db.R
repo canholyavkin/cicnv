@@ -4,7 +4,7 @@
 # Packages ----------------------------------------------------------------
 library(RMySQL)
 library(valr)
-library(dplyr)
+library(tidyverse)
 
 
 # Protein Coding Genes ----------------------------------------------------
@@ -14,6 +14,9 @@ protein_coding_genes <- collect(tbl(db, "knownGene"))
 
 protein_coding_genes %>% 
   filter(proteinID != "") %>% 
-  select(chrom, start = txStart, end = txEnd, name) %>% 
-  write.table("./data/reference/protein_coding_genes.bed",
+  mutate(exonStarts = str_remove(exonStarts, ",$"),
+         exonEnds   = str_remove(exonEnds, ",$")) %>% 
+  separate_rows(exonStarts, exonEnds, sep = ",") %>% # Regions (Removing of intronic regions)
+  select(chrom, start = exonStarts, end = exonEnds, name) %>% 
+  write.table("./data/reference/protein_coding_regions.bed",
               row.names = F, quote = F, sep = "\t", col.names = F)
