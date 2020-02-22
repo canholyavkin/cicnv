@@ -41,20 +41,15 @@ hi_regions <- read.delim("ftp://ftp.clinicalgenome.org/ClinGen_region_curation_l
          end = as.numeric(end)) %>%
   tbl_interval()
 
-# known_regions %>% 
-#   filter(triplosensitivity_score == 3) %>% 
-#   mutate(chrom = str_remove(genomic_location, ":.*"),
-#          start = str_remove(genomic_location, "-.*") %>% str_remove(".*:") %>% str_trim(),
-#          end = str_remove(genomic_location, ".*-")) %>% 
-#   select(chrom, start, end, isca_region_name) %>% 
-#   write.table("./data/reference/known_triplosensitive_regions.bed",
-#               row.names = F, quote = F, sep = "\t", col.names = F)
-# 
 
-# 
-# # HI Genes 5' Regions -----------------------------------------------------
-# 
-# 
-# refseq %>% 
-#   count(transcript_type, sort = T)
-
+# 5' Haploinsufficient Genes ----------------------------------------------
+hi_genes_5p <- refseq %>%
+  filter(gene_name %in% hi_genes$name,
+         transcript_type == "mRNA") %>% 
+  rename(cds_end = cds_stop) %>% 
+  select(chrom, start, end, name, cds_start, cds_end, strand) %>% 
+  mutate(start = as.character(start),
+         end = as.character(end)) %>% 
+  create_utrs5() %>% 
+  mutate(start = as.numeric(start),
+         end   = as.numeric(end))

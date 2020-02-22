@@ -28,3 +28,12 @@ loss_2b <- function(x) {
   
   if_else(nrow(int_hi_genes) > 0 | nrow(int_hi_regions) > 0, T, F)
 }
+
+loss_2c <- function(x) {
+  query   <- trbl_interval(~ chrom, ~ start, ~ end,
+                           x[[1]], as.numeric(x[[2]]), as.numeric(x[[3]]))
+  int_hi_genes_5p <- bed_intersect(query, hi_genes_5p) %>%
+    mutate(complete_overlap = (.overlap == end.y - start.y))
+  
+  if_else(any(int_hi_genes_5p$complete_overlap), 1, 0.45)
+}
