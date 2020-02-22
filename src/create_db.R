@@ -22,9 +22,15 @@ protein_coding_regions <- refseq %>%
          end = as.numeric(end)) %>%
   tbl_interval()
 
+# Haploinsufficient Genes -------------------------------------------------
+hi_genes <- read_delim("ftp://ftp.clinicalgenome.org/ClinGen_haploinsufficiency_gene_GRCh37.bed",
+                       delim = "\t", skip = 1, col_names = F) %>%
+  filter(X5 == 3) %>%
+  select(chrom = X1, start = X2, end = X3, name = X4)
+
 # Known Functionally Important Elements -----------------------------------
-known_hi_regions <- read.delim("ftp://ftp.clinicalgenome.org/ClinGen_region_curation_list_GRCh37.tsv",
-                               sep = "\t", skip = 5) %>%
+hi_regions <- read.delim("ftp://ftp.clinicalgenome.org/ClinGen_region_curation_list_GRCh37.tsv",
+                         sep = "\t", skip = 5) %>%
   janitor::clean_names() %>% 
   filter(haploinsufficiency_score == 3) %>%
   mutate(chrom = str_remove(genomic_location, ":.*"),
@@ -44,15 +50,7 @@ known_hi_regions <- read.delim("ftp://ftp.clinicalgenome.org/ClinGen_region_cura
 #   write.table("./data/reference/known_triplosensitive_regions.bed",
 #               row.names = F, quote = F, sep = "\t", col.names = F)
 # 
-# # HI Genes ----------------------------------------------------------------
-# hi_genes <- read_delim("ftp://ftp.clinicalgenome.org/ClinGen_haploinsufficiency_gene_GRCh37.bed", 
-#                        delim = "\t", skip = 1, col_names = F) %>% 
-#   filter(X5 == 3) %>% 
-#   select(chrom = X1, start = X2, end = X3, name = X4)
-# 
-# write.table(hi_genes, "./data/reference/haploinsufficient_genes.bed",
-#               row.names = F, quote = F, sep = "\t", col.names = F)
-# 
+
 # 
 # # HI Genes 5' Regions -----------------------------------------------------
 # 

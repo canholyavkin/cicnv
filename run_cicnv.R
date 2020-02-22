@@ -9,7 +9,7 @@ source("./src/create_db.R")
 rd <- read_bed("./data/raw/sample_interval.bed", n_fields = 4) %>%
   mutate(chrom = ifelse(str_detect(chrom,"chr"), chrom, paste0("chr",chrom)))
 
-# custom_target <- "1: 6645383 - 7849766" %>% str_remove_all(",")
+# custom_target <- "10: 180304 - 300277" %>% str_remove_all(",")
 # custom_chr    <- str_remove(custom_target, ":.*") %>% paste0("chr",.)
 # custom_start  <- str_remove(custom_target, ".*: ") %>% str_remove(" .*") %>% as.numeric()
 # custom_end    <- str_remove(custom_target, ".*- ") %>% as.numeric()
@@ -19,4 +19,6 @@ rd <- read_bed("./data/raw/sample_interval.bed", n_fields = 4) %>%
 # )
 
 rd %>% 
-  mutate(loss_1  = apply(rd, 1, function(x) loss_1(x)))
+  mutate(loss_1  = apply(rd, 1, function(x) loss_1(x)),
+         loss_2a = apply(rd, 1, function(x) loss_2a(x)),
+         loss_2b = apply(rd, 1, function(x) loss_2b(x)))
