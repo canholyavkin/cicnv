@@ -14,13 +14,13 @@ refseq <- vroom::vroom("./data/reference/refseq_105v2.txt.gz",
   rename(chrom = chr, end = stop, name = transcript_name)
 
 # Protein Coding Regions --------------------------------------------------
+# Data includes only protein coding (mRNA) genes
 protein_coding_regions <- refseq %>% 
   filter(transcript_type=="mRNA") %>% 
   separate_rows(exon_starts, exon_stops, sep = ",") %>% 
   select(chrom, start = exon_starts, end = exon_stops, name, gene_name) %>% 
   mutate(start = as.numeric(start) + 1,
-         end = as.numeric(end)) %>%
-  tbl_interval()
+         end = as.numeric(end))
 
 # Haploinsufficient Genes -------------------------------------------------
 hi_genes <- read_delim("ftp://ftp.clinicalgenome.org/ClinGen_haploinsufficiency_gene_GRCh37.bed",
@@ -35,11 +35,28 @@ hi_regions <- read.delim("ftp://ftp.clinicalgenome.org/ClinGen_region_curation_l
   filter(haploinsufficiency_score == 3) %>%
   mutate(chrom = str_remove(genomic_location, ":.*"),
          start = str_remove(genomic_location, "-.*") %>% str_remove(".*:") %>% str_trim(),
-         end = str_remove(genomic_location, ".*-")) %>%
+         end   = str_remove(genomic_location, ".*-")) %>%
   select(chrom, start, end, isca_region_name) %>%
   mutate(start = as.numeric(start),
-         end = as.numeric(end)) %>%
-  tbl_interval()
+         end   = as.numeric(end))
+
+
+# Coding Region of Haploinsufficient Genes --------------------------------
+hi_genes_coding <- refseq %>% 
+  filter(transcript_type=="mRNA",
+         gene_name %in% hi_genes$name) %>% 
+  separate_rows(exon_starts, exon_stops, sep=",") %>% 
+  mutate_at(vars(starts_with("cds") | starts_with("exon")), as.numeric) %>% 
+  filter(!is.na(cds_start)) %>% 
+  filter(cds_start < exon_stops,
+         cds_stop > exon_starts) %>% 
+  mutate(exon_starts = case_when(exon_starts < cds_start ~ cds_start,
+                                 exon_starts >= cds_start ~ exon_starts),
+         exon_stops = case_when(exon_stops > cds_stop ~ cds_stop,
+                                exon_stops <= cds_stop ~ exon_stops)) %>% 
+  select(chrom, start=exon_starts, end=exon_stops) %>% 
+  bed_merge() %>% 
+  bed_sorter()
 
 # 5' Haploinsufficient Genes ----------------------------------------------
 hi_genes_5p <- refseq %>%
@@ -63,5 +80,6 @@ hi_genes_3p <- refseq %>%
          end = as.character(end)) %>% 
   create_utrs3() %>% 
   left_join(., select(refseq, gene_name, name), by = "name") %>% 
-  mutate(start = as.numeric(start) + 1,
+  mutate(start = case_when(strand == "+" ~ as.numeric(start),
+                           strand == "-" ~ as.numeric(start) - 1),
          end   = as.numeric(end))
