@@ -22,6 +22,7 @@ If the submitted CNV (loss) has overlap (>1bp) with 5' end with coding sequence 
 - **19.02.2020** - Evidence code G1A function and protein-coding gene database are added.
 
 ## To Do
+[ ] L2D evidence criteria will be added.
 [ ] Overlapped genes/regions will be included in evidence check results. 
 
 # References
